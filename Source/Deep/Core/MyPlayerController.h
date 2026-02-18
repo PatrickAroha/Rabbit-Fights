@@ -7,9 +7,6 @@
 #include "MyHUD.h"
 #include "MyPlayerController.generated.h"
 
-/**
- * 
- */
 UCLASS()
 class DEEP_API AMyPlayerController : public APlayerController
 {
