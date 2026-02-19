@@ -2,8 +2,50 @@
 
 
 #include "MyPlayerController.h"
+
+#include "MyGameState.h"
 #include "MyHUD.h"
 #include "GameFramework/PlayerState.h"
+
+class AMyGameState;
+
+void AMyPlayerController::BeginPlay()
+{
+	Super::BeginPlay();
+
+	if (!IsLocalController()) return;
+	
+	TryBindGameState();			//Faz o Bind pra gerar a HUD
+	
+	AMyGameState* GS = GetWorld() ? GetWorld()->GetGameState<AMyGameState>() : nullptr;
+	if (GS)
+	{
+		TryCreateHUDIfReady(GS->MatchPhase, GS->MatchPhase);
+	}
+}
+
+void AMyPlayerController::TryBindGameState()
+{
+	AMyGameState* GS = GetWorld() ? GetWorld()->GetGameState<AMyGameState>() : nullptr;
+	if (!GS) return;
+
+	GS->OnMatchPhaseChanged.RemoveAll(this);
+	GS->OnMatchPhaseChanged.AddDynamic(this, &AMyPlayerController::TryCreateHUDIfReady);
+}
+
+void AMyPlayerController::TryCreateHUDIfReady(EMatchPhase Old, EMatchPhase New)
+{
+	if (bHUDCreated) return;
+	
+	if (New == EMatchPhase::IntroducingMinigame)
+	{
+		bHUDCreated = true;
+		CreateMyHUD();
+	}
+}
+
+
+// Spectator Mode Functions ---------------------------------------------------------------------------------------------------
 
 void AMyPlayerController::OnRep_Pawn()
 {
