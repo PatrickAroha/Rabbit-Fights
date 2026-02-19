@@ -9,5 +9,34 @@ void AMyGameState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLife
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
-	DOREPLIFETIME(AMyGameState, GameStart);
+	DOREPLIFETIME(AMyGameState, MatchPhase);
+}
+
+void AMyGameState::SetMatchPhase(EMatchPhase NewPhase)
+{
+	if (!HasAuthority()) return;
+	if (MatchPhase == NewPhase) return;
+
+	const EMatchPhase Old = MatchPhase;
+	MatchPhase = NewPhase;
+	
+	OnMatchPhaseChanged.Broadcast(Old, NewPhase);
+	
+}
+
+void AMyGameState::Countdown(float DurationSeconds)
+{
+	if (!HasAuthority())
+	{
+		return;
+	}
+
+	const float ServerNow = GetServerWorldTimeSeconds();
+	
+	CountdownEndTime = FMath::CeilToInt32(ServerNow + DurationSeconds);
+}
+
+void AMyGameState::OnRep_MatchPhase(EMatchPhase OldPhase)
+{
+	OnMatchPhaseChanged.Broadcast(OldPhase, MatchPhase);
 }
