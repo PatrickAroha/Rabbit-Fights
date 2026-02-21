@@ -59,6 +59,7 @@ void AMyPlayerController::OnRep_Pawn()
 	if (IsInState(NAME_Spectating))
 	{
 		ServerViewNextPlayer();
+		OnPossessedPawn();
 	}
 }
 

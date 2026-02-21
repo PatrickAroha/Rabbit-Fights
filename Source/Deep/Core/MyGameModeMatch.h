@@ -18,6 +18,8 @@ protected:
 
 	virtual void InitGameState() override;
 
+	UFUNCTION(BlueprintImplementableEvent)
+	void OnInitGame();
 public:
 	UFUNCTION(BlueprintPure, Category="Refs")
 	UMyGameInstance* GetMyGI() const { return MyGI; }

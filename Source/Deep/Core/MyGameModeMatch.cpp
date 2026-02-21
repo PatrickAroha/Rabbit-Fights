@@ -13,4 +13,6 @@ void AMyGameModeMatch::InitGameState()
 
 	if (MyGS)
 	MyGS = GetGameState<AMyGameState>();
+
+	OnInitGame();
 }

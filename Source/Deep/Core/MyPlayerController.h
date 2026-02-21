@@ -52,6 +52,8 @@ public:
 	UFUNCTION(BlueprintImplementableEvent)
 	void CreateMyHUD();
 
+	UFUNCTION(BlueprintImplementableEvent)
+	void OnPossessedPawn();
 	
 	UPROPERTY(Transient)
 	bool bHUDCreated = false;
