@@ -7,9 +7,6 @@
 #include "MyHUD.h"
 #include "MyPlayerController.generated.h"
 
-/**
- * 
- */
 UCLASS()
 class DEEP_API AMyPlayerController : public APlayerController
 {
@@ -17,7 +14,19 @@ class DEEP_API AMyPlayerController : public APlayerController
 
 protected:
 
+	virtual void BeginPlay() override;
 	virtual void OnRep_Pawn() override;
+
+	
+	UFUNCTION() 
+	void TryBindGameState();
+
+	UFUNCTION() 
+	void TryCreateHUDIfReady(EMatchPhase Old, EMatchPhase New);
+
+	//UFUNCTION(BlueprintCallable)
+	//void TryBindOnGameStart();
+
 	
 public:
 	
@@ -39,5 +48,13 @@ public:
 	
 	UFUNCTION(BlueprintCallable, Category="Spectate")
 	void BP_ViewNextPlayer();
+
+	UFUNCTION(BlueprintImplementableEvent)
+	void CreateMyHUD();
+
+	UFUNCTION(BlueprintImplementableEvent)
+	void OnPossessedPawn();
 	
+	UPROPERTY(Transient)
+	bool bHUDCreated = false;
 };
