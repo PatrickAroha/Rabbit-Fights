@@ -20,8 +20,15 @@ void AMyGameState::SetMatchPhase(EMatchPhase NewPhase)
 	const EMatchPhase Old = MatchPhase;
 	MatchPhase = NewPhase;
 	
+	OnPhaseChanged(MatchPhase);
+	
 	OnMatchPhaseChanged.Broadcast(Old, NewPhase);
 	
+}
+
+void AMyGameState::SetMatchPointsToEndGame(int32 MatchPoints)
+{
+	TotalMatchPoints = MatchPoints;
 }
 
 void AMyGameState::Countdown(float DurationSeconds)

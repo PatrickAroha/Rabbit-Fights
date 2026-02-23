@@ -29,6 +29,9 @@ public:
 	UPROPERTY(BlueprintReadWrite, Replicated)
 	int32 CountdownEndTime = 0;
 
+	UPROPERTY(BlueprintReadWrite, Replicated)
+	int32 TotalMatchPoints = 5;
+	
 	UPROPERTY(BlueprintAssignable, Category="Match|Events")
 	FOnMatchPhaseChanged OnMatchPhaseChanged;
 	
@@ -37,8 +40,14 @@ public:
 	UFUNCTION(BlueprintCallable, Category="Match|Events")
 	void SetMatchPhase(EMatchPhase NewPhase);
 
+	UFUNCTION(BlueprintCallable, Category="Match|Events")
+	void SetMatchPointsToEndGame(int32 MatchPoints);
+
 	UFUNCTION(BlueprintCallable)
 	void Countdown(float DurationSeconds = 3.f);
+	
+	UFUNCTION(BlueprintImplementableEvent)
+	void OnPhaseChanged(EMatchPhase NewMatchPhase);
 	
 protected:
 	
