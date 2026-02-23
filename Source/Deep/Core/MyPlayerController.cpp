@@ -49,11 +49,6 @@ void AMyPlayerController::TryCreateHUDIfReady(EMatchPhase Old, EMatchPhase New)
 
 void AMyPlayerController::OnRep_Pawn()
 {
-	UE_LOG(LogTemp, Warning, TEXT("[OnRep_Pawn] Local=%d | HasAuthority=%d | State=%s"),
-		IsLocalController() ? 1 : 0,
-		HasAuthority() ? 1 : 0,
-		*StateName.ToString());
-		
 	Super::OnRep_Pawn();
 
 	if (IsInState(NAME_Spectating))

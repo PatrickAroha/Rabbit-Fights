@@ -54,6 +54,7 @@ void ARabbitCharacterBase::PossessedBy(AController* NewController)
 	if (AbilitySystemComponent)
 	{
 		AbilitySystemComponent->InitAbilityActorInfo(this, this);
+		GenerateWidgetOnSpawn();
 	}
 }
 
@@ -78,6 +79,7 @@ void ARabbitCharacterBase::OnRep_PlayerState()
 	if (AbilitySystemComponent)
 	{
 		AbilitySystemComponent->InitAbilityActorInfo(this, this);
+		GenerateWidgetOnSpawn();
 	}
 }
 
