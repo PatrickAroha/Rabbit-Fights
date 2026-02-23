@@ -1,7 +1,7 @@
 ﻿// Fill out your copyright notice in the Description page of Project Settings.
 
-#include "MyGameModeLobby.h"
 #include "MyPlayerStateLobby.h"
+#include "MyGameModeLobby.h"
 #include "MyHUDLobby.h"
 #include "Net/UnrealNetwork.h"
 
