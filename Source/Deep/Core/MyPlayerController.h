@@ -24,9 +24,6 @@ protected:
 	UFUNCTION() 
 	void TryCreateHUDIfReady(EMatchPhase Old, EMatchPhase New);
 
-	//UFUNCTION(BlueprintCallable)
-	//void TryBindOnGameStart();
-
 	
 public:
 	
@@ -54,7 +51,7 @@ public:
 
 	UFUNCTION(BlueprintImplementableEvent)
 	void OnPossessedPawn();
-	
+
 	UPROPERTY(Transient)
 	bool bHUDCreated = false;
 };

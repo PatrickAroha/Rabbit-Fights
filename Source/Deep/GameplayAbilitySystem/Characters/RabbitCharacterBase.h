@@ -39,6 +39,9 @@ protected:
 	virtual void PossessedBy(AController* NewController) override;
 
 	virtual void OnRep_PlayerState() override;
+
+	UFUNCTION(BlueprintImplementableEvent)
+	void GenerateWidgetOnSpawn();
 	
 public:	
 	// Called every frame
