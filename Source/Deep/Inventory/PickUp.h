@@ -6,20 +6,39 @@
 #include "GameFramework/Actor.h"
 #include "PickUp.generated.h"
 
+class UItemDefinition;
+class UStaticMeshComponent;
+
 UCLASS()
 class DEEP_API APickUp : public AActor
 {
 	GENERATED_BODY()
 
 public:
-	// Sets default values for this actor's properties
+
 	APickUp();
 
-protected:
-	// Called when the game starts or when spawned
-	virtual void BeginPlay() override;
+	UPROPERTY(VisibleAnywhere)
+	TObjectPtr<UStaticMeshComponent> MeshComp;
+	
+	UPROPERTY(ReplicatedUsing=OnRep_Def, EditAnywhere, BlueprintReadWrite)
+	TObjectPtr<UItemDefinition> Def = nullptr;
+	
+	UPROPERTY(ReplicatedUsing=OnRep_Quantity, EditAnywhere, BlueprintReadWrite)
+	int32 Quantity = 0;
+	
+	UFUNCTION(BlueprintCallable)
+	void SetQuantity(int32 NewQty);
+	
+	UFUNCTION(BlueprintCallable)
+	void SetDef(UItemDefinition* NewDef);
+	
+	UFUNCTION()
+	void OnRep_Def();
+	
+	UFUNCTION()
+	void OnRep_Quantity();
 
-public:
-	// Called every frame
-	virtual void Tick(float DeltaTime) override;
+	
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 };

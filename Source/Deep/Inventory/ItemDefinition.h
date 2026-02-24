@@ -1,20 +1,25 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Engine"
 #include "ItemDefinition.generated.h"
 
+class APickUp;
 
-
-UCLASS(BlueprintType)
+UCLASS(BlueprintType, Blueprintable)
 class DEEP_API UItemDefinition : public UPrimaryDataAsset
 {
 	GENERATED_BODY()
 
 public:
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Stack")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Stack")
 	bool bStackable = true;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Stack", meta=(ClampMin="1"))
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Stack", meta=(ClampMin="1"))
 	int32 MaxStack = 99;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Mesh")
+	TObjectPtr<UStaticMesh> Mesh;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="SpawnActor")
+	TSubclassOf<APickUp> PickupClass;
 };
