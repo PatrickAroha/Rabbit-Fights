@@ -3,11 +3,11 @@
 
 #include "PickUp.h"
 #include "ItemDefinition.h"
+#include "ItemInstance.h"
 #include "Net/UnrealNetwork.h"
 #include "Components/StaticMeshComponent.h"
+#include "Engine/ActorChannel.h"
 
-
-// Sets default values
 APickUp::APickUp()
 {
 	PrimaryActorTick.bCanEverTick = false;
@@ -17,44 +17,43 @@ APickUp::APickUp()
 	
 	bReplicates = true;
 	AActor::SetReplicateMovement(true);
-	
+
 }
 
-void APickUp::SetQuantity(int32 NewQty)
+void APickUp::BeginPlay()
 {
-	if (HasAuthority())
+	Super::BeginPlay();
+	RefreshMesh();
+}
+
+
+void APickUp::OnRep_Item()
+{
+	RefreshMesh();
+}
+
+void APickUp::RefreshMesh()
+{
+	if (Item && Item->Def && Item->Def->Mesh)
 	{
-		Quantity = NewQty;
-		ForceNetUpdate();
+		MeshComp->SetStaticMesh(Item->Def->Mesh);
 	}
 }
 
-void APickUp::OnRep_Def() // Ao Atualizar o Item
+bool APickUp::ReplicateSubobjects(UActorChannel* Channel, FOutBunch* Bunch, FReplicationFlags* RepFlags)
 {
-	if (Def && Def->Mesh)
-	{
-		MeshComp->SetStaticMesh(Def->Mesh);
-	}
-}
+	bool bWrote = Super::ReplicateSubobjects(Channel, Bunch, RepFlags);
 
-void APickUp::SetDef(UItemDefinition* NewDef)
-{
-	if (HasAuthority())
+	if (Item)
 	{
-		Def = NewDef;
-		OnRep_Def();
-		ForceNetUpdate();
+		bWrote |= Channel->ReplicateSubobject(Item, *Bunch, *RepFlags);
 	}
-}
 
-void APickUp::OnRep_Quantity() // Ao Atualizar a quantidade
-{
-	
+	return bWrote;
 }
 
 void APickUp::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-	DOREPLIFETIME(APickUp, Def);
-	DOREPLIFETIME(APickUp, Quantity);
+	DOREPLIFETIME(APickUp, Item);
 }

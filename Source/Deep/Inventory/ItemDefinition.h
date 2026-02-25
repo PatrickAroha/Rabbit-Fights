@@ -17,7 +17,10 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Stack", meta=(ClampMin="1"))
 	int32 MaxStack = 99;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Mesh")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Design")
+	UTexture2D* ItemIcon;
+	
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Design")
 	TObjectPtr<UStaticMesh> Mesh;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="SpawnActor")

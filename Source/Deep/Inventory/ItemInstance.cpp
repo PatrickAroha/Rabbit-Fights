@@ -1,13 +1,24 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 #include "ItemInstance.h"
-#include "ItemInstance.h"
-#include "ItemDefinition.h"
+
+#include "InventoryComponent.h"
+#include "PickUp.h"
 #include "Net/UnrealNetwork.h"
 
-void UItemInstance::Init(UItemDefinition* InDef, int32 InQty)
+void UItemInstance::OnRep_Def()
 {
-	Def = InDef;
-	Quantity = InQty;
+	if (APickUp* PU = Cast<APickUp>(GetOuter()))
+	{
+		PU->OnRep_Item();
+	}
+}
+
+void UItemInstance::OnRep_Quantity()
+{
+	if (UInventoryComponent* Inv = Cast<UInventoryComponent>(GetOuter()))
+	{
+		Inv->OnInventoryChanged.Broadcast();
+	}
 }
 
 void UItemInstance::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -16,4 +27,13 @@ void UItemInstance::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLif
 	DOREPLIFETIME(UItemInstance, Def);
 	DOREPLIFETIME(UItemInstance, Quantity);
 	DOREPLIFETIME(UItemInstance, Durability);
+}
+
+//Helper para atualizar informações
+void UItemInstance::CopyFrom(const UItemInstance* Item)
+{
+	if (!Item) return;
+	Def = Item->Def;
+	Quantity = Item->Quantity;
+	Durability = Item->Durability;
 }

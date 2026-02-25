@@ -9,19 +9,14 @@
 UInventoryComponent::UInventoryComponent()
 {
 	SetIsReplicatedByDefault(true);
-	SetIsReplicatedByDefault(true);
 	Slots.SetNum(3);
-}
-
-void UInventoryComponent::OnRep_Slots()
-{
-	// atualizar HUD / equip aqui
 }
 
 void UInventoryComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 	DOREPLIFETIME(UInventoryComponent, Slots);
+	DOREPLIFETIME(UInventoryComponent, EquippedSlot);
 }
 
 bool UInventoryComponent::ReplicateSubobjects(UActorChannel* Channel, FOutBunch* Bunch, FReplicationFlags* RepFlags)
@@ -40,81 +35,84 @@ bool UInventoryComponent::ReplicateSubobjects(UActorChannel* Channel, FOutBunch*
 
 // ======= Inventory Logic =======
 
-int32 UInventoryComponent::TryAddStack(UItemDefinition* Def, int32& Qty)
+int32 UInventoryComponent::TryAddStack(const UItemInstance* Item, int32& Qty)
 {
-	if (!Def || Qty <= 0) return Qty;
-	if (!Def->bStackable) return Qty;
+	if (!Item || !Item->Def || Qty <= 0) return Qty;
+	if (!Item->Def->bStackable) return Qty;
 
-	for (UItemInstance* Item : Slots)
+	for (UItemInstance* Slot : Slots)
 	{
 		if (Qty <= 0) break;
-		if (!Item || Item->Def != Def) continue;
-
-		const int32 Space = FMath::Max(0, Def->MaxStack - Item->Quantity);
+		if (!Slot || !Item || Slot->Def != Item->Def) continue;
+		const int32 Space = FMath::Max(0, Item->Def->MaxStack - Slot->Quantity);
 		const int32 AddNow = FMath::Min(Space, Qty);
 		if (AddNow <= 0) continue;
 		
-		Item->Quantity += AddNow;
+		Slot->Quantity += AddNow;
 		Qty -= AddNow;
+
 	}
 
 	return Qty;
 }
 
-int32 UInventoryComponent::NewStack(UItemDefinition* Def, int32 Qty)
+int32 UInventoryComponent::NewStack(const UItemInstance* Item, int32 Qty)
 {
-	if (!Def || Qty <= 0) return Qty;
-	const int32 MaxPerStack = Def->bStackable ? Def->MaxStack : 1;
-	
+	if (!Item || !Item->Def || Qty <= 0) return Qty;
+
+	const int32 MaxPerStack = Item->Def->bStackable ? Item->Def->MaxStack : 1;
+
 	for (TObjectPtr<UItemInstance>& Slot : Slots)
 	{
 		if (Qty <= 0) break;
 		if (Slot) continue;
 
-		UItemInstance* NewItem = NewObject<UItemInstance>(this);
+		UItemInstance* NewItem = NewObject<UItemInstance>(this, Item->GetClass());
 		const int32 Put = FMath::Min(Qty, MaxPerStack);
+		NewItem->CopyFrom(Item);
+		NewItem->Quantity = Put;
 
-		NewItem->Init(Def, Put);
 		Slot = NewItem;
 		Qty -= Put;
 	}
-	
 	return Qty;
 }
 
-bool UInventoryComponent::AddItem(UItemDefinition* Def, int32 Qty, int32& QtyRemaining)
+bool UInventoryComponent::AddItem(const UItemInstance* Item, int32& QtyRemaining)
 {
-	QtyRemaining = Qty;
-	if (!GetOwner() || !GetOwner()->HasAuthority()) return false;
-	if (!Def || Qty <= 0) return false;
-
-	const int32 Start = Qty;
 	
-	QtyRemaining = TryAddStack(Def, QtyRemaining);
+	if (!GetOwner() || !GetOwner()->HasAuthority()) return false;
+	if (!Item || !Item->Def || QtyRemaining <= 0) return false;
+
+	const int32 Start = QtyRemaining;
+	QtyRemaining = TryAddStack(Item, QtyRemaining);
+
 	if (QtyRemaining > 0)
-		QtyRemaining = NewStack(Def, QtyRemaining);
+		QtyRemaining = NewStack(Item, QtyRemaining);
 	
 	GetOwner()->ForceNetUpdate();
 	return QtyRemaining != Start;
 }
 
-void UInventoryComponent::Server_TryPickup_Implementation(APickUp* Pickup)
+void UInventoryComponent::Server_TryPickup_Implementation(AActor* RecivedActor)
 {
+	APickUp* Pickup = Cast<APickUp>(RecivedActor);
 	if (!GetOwner() || !GetOwner()->HasAuthority()) return;
-	if (!Pickup || !Pickup->Def || Pickup->Quantity <= 0) return;
+	if (!Pickup || !Pickup->Item || !Pickup->Item->Def || Pickup->Item->Quantity <= 0) return;
 	
-	int32 PickUpQty = 0;
-	const bool bAddedItem = AddItem(Pickup->Def, Pickup->Quantity, PickUpQty);
+	int32 QtyRemaining = Pickup->Item->Quantity;
+	const bool bAddedItem = AddItem(Pickup->Item, QtyRemaining);
 
 	if (!bAddedItem)
 	{
-		// não entrou nada -> troca direto no slot equipado
-		Server_PickupReplace_Implementation(Pickup, EquippedSlot); //trocar depois handItem "EquippedSlot"
+		Server_PickupReplace_Implementation(Pickup, EquippedSlot); //não adicionou então chama trocar de item
 		return;
 	}
 	
-	if (PickUpQty <= 0) Pickup->Destroy();
-	else Pickup->SetQuantity(PickUpQty);
+	Pickup->Item->Quantity = QtyRemaining;
+
+	if (Pickup->Item->Quantity <= 0) Pickup->Destroy();
+	else Pickup->ForceNetUpdate();
 	
 	GetOwner()->ForceNetUpdate();
 }
@@ -122,25 +120,19 @@ void UInventoryComponent::Server_TryPickup_Implementation(APickUp* Pickup)
 void UInventoryComponent::Server_PickupReplace_Implementation(APickUp* Pickup, int32 SlotIndex)
 {
 	if (!GetOwner() || !GetOwner()->HasAuthority()) return;
-	if (!Pickup || SlotIndex < 0 || SlotIndex > 2) return;
-	if (!Pickup->Def || Pickup->Quantity <= 0) return;
-
-	UItemInstance* OldHandItem = Slots[SlotIndex];
+	if (!Pickup || !Pickup->Item || !Pickup->Item->Def || Pickup->Item->Quantity <= 0) return;
+	if (SlotIndex < 0 || SlotIndex >= Slots.Num()) return;
+	if (!Slots[SlotIndex]) return;
 	
-	UItemInstance* NewItem = NewObject<UItemInstance>(this);
-	NewItem->Init(Pickup->Def, Pickup->Quantity);
-	Slots[SlotIndex] = NewItem;
+	Server_DropItem_Implementation(SlotIndex);
 	
-	if (OldHandItem && OldHandItem->Def)
-	{
-		Pickup->SetDef(OldHandItem->Def);
-		Pickup->SetQuantity(OldHandItem->Quantity);
-	}
-	else
-	{
-		Pickup->Destroy();
-	}
-
+	int32 Remaining = Pickup->Item->Quantity;
+	Remaining = NewStack(Pickup->Item, Remaining);
+	
+	Pickup->Item->Quantity = Remaining;
+	if (Remaining <= 0) Pickup->Destroy();
+	else Pickup->ForceNetUpdate();
+	
 	GetOwner()->ForceNetUpdate();
 }
 
@@ -172,17 +164,24 @@ void UInventoryComponent::Server_DropItem_Implementation(int32 SlotIndex)
 	Params.Owner = OwnerActor;
 	Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
 
-	TSubclassOf<APickUp> ClassToSpawn = Item->Def->PickupClass
-	? Item->Def->PickupClass
-	: TSubclassOf<APickUp>(APickUp::StaticClass());
+	TSubclassOf<APickUp> ClassToSpawn = Item->Def->PickupClass? Item->Def->PickupClass: TSubclassOf<APickUp>(APickUp::StaticClass());
 	APickUp* Pickup = World->SpawnActor<APickUp>(ClassToSpawn, SpawnLoc, SpawnRot, Params);
 
 	if (Pickup)
 	{
-		Pickup->SetDef(Item->Def);
-		Pickup->SetQuantity(Item->Quantity);
+		Pickup->Item = NewObject<UItemInstance>(Pickup, Item->GetClass());
+		Pickup->Item->CopyFrom(Item);
+		Pickup->RefreshMesh(); 
+		Pickup->ForceNetUpdate();
 	}
 
 	Slots[SlotIndex] = nullptr;
+	
 	OwnerActor->ForceNetUpdate();
+	
+}
+
+void UInventoryComponent::OnRep_Slots()
+{
+	OnInventoryChanged.Broadcast();
 }

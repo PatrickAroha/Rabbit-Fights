@@ -6,7 +6,7 @@
 #include "GameFramework/Actor.h"
 #include "PickUp.generated.h"
 
-class UItemDefinition;
+class UItemInstance;
 class UStaticMeshComponent;
 
 UCLASS()
@@ -17,28 +17,20 @@ class DEEP_API APickUp : public AActor
 public:
 
 	APickUp();
+	void BeginPlay();
 
-	UPROPERTY(VisibleAnywhere)
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="PickUp")
 	TObjectPtr<UStaticMeshComponent> MeshComp;
 	
-	UPROPERTY(ReplicatedUsing=OnRep_Def, EditAnywhere, BlueprintReadWrite)
-	TObjectPtr<UItemDefinition> Def = nullptr;
-	
-	UPROPERTY(ReplicatedUsing=OnRep_Quantity, EditAnywhere, BlueprintReadWrite)
-	int32 Quantity = 0;
-	
-	UFUNCTION(BlueprintCallable)
-	void SetQuantity(int32 NewQty);
-	
-	UFUNCTION(BlueprintCallable)
-	void SetDef(UItemDefinition* NewDef);
-	
-	UFUNCTION()
-	void OnRep_Def();
-	
-	UFUNCTION()
-	void OnRep_Quantity();
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, ReplicatedUsing=OnRep_Item, Instanced, Category="PickUp")
+	TObjectPtr<UItemInstance> Item;
 
+	UFUNCTION()
+	void OnRep_Item();
+	void RefreshMesh();
+
+	// PickUp.h
+    virtual bool ReplicateSubobjects(UActorChannel* Channel, FOutBunch* Bunch, FReplicationFlags* RepFlags) override;
 	
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 };
