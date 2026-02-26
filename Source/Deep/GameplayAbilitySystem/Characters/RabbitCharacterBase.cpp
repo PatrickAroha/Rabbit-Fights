@@ -3,6 +3,8 @@
 
 #include "RabbitCharacterBase.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "AbilitySystemBlueprintLibrary.h"
+#include "Deep/GameplayAbilitySystem/RabbitAbilitySystemComponent.h"
 #include "Deep/GameplayAbilitySystem/AttributeSets/BasicAttributeSet.h"
 
 // Sets default values
@@ -12,7 +14,7 @@ ARabbitCharacterBase::ARabbitCharacterBase()
 	PrimaryActorTick.bCanEverTick = true;
 
 	//Add The Ability system component
-	AbilitySystemComponent = CreateDefaultSubobject<UAbilitySystemComponent>(TEXT("AbilitySystemComponent"));
+	AbilitySystemComponent = CreateDefaultSubobject<URabbitAbilitySystemComponent>(TEXT("AbilitySystemComponent"));
 	AbilitySystemComponent->SetIsReplicated(true);
 	AbilitySystemComponent->SetReplicationMode(ASCReplicationMode);
 
@@ -55,6 +57,7 @@ void ARabbitCharacterBase::PossessedBy(AController* NewController)
 	{
 		AbilitySystemComponent->InitAbilityActorInfo(this, this);
 		GenerateWidgetOnSpawn();
+		GrantAbilities(StartingAbilities);
 	}
 }
 
@@ -86,4 +89,43 @@ void ARabbitCharacterBase::OnRep_PlayerState()
 UAbilitySystemComponent* ARabbitCharacterBase::GetAbilitySystemComponent() const
 {
 	return AbilitySystemComponent;
+}
+
+TArray<FGameplayAbilitySpecHandle> ARabbitCharacterBase::GrantAbilities(TArray<TSubclassOf<UGameplayAbility>> AbilitiesToGrant)
+{
+	if (!AbilitySystemComponent || !HasAuthority()) return TArray<FGameplayAbilitySpecHandle>();
+
+	TArray<FGameplayAbilitySpecHandle> AbilityHandles;
+	
+	for (TSubclassOf<UGameplayAbility> Ability : AbilitiesToGrant)
+	{
+		FGameplayAbilitySpecHandle SpecHandle = AbilitySystemComponent->GiveAbility(FGameplayAbilitySpec(Ability, 1, -1, this));
+
+		AbilityHandles.Add(SpecHandle);
+	}
+	
+	SendAbilitiesChangedEvent();
+	return AbilityHandles;
+}
+
+void ARabbitCharacterBase::RemoveAbilities(TArray<FGameplayAbilitySpecHandle> AbilityHandlesToRemove)
+{
+	if (!AbilitySystemComponent || !HasAuthority()) return;
+
+	for (FGameplayAbilitySpecHandle AbilityHandle : AbilityHandlesToRemove)
+	{
+		AbilitySystemComponent->ClearAbility(AbilityHandle);
+	}
+
+	SendAbilitiesChangedEvent();
+}
+
+void ARabbitCharacterBase::SendAbilitiesChangedEvent()
+{
+	FGameplayEventData EventData;
+	EventData.EventTag = FGameplayTag::RequestGameplayTag(FName("Event.Abilities.Changed"));
+	EventData.Instigator = this;
+	EventData.Target = this;
+
+	UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(this, EventData.EventTag, EventData);
 }
