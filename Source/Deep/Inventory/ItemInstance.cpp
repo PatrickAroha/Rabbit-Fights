@@ -1,39 +1,76 @@
-// Fill out your copyright notice in the Description page of Project Settings.
 #include "ItemInstance.h"
-
 #include "InventoryComponent.h"
 #include "PickUp.h"
+#include "Deep/Inventory/Fragment.h"
 #include "Net/UnrealNetwork.h"
 
-void UItemInstance::OnRep_Def()
+void UItemInstance::SetQuantity(int32 NewQty)
 {
-	if (APickUp* PU = Cast<APickUp>(GetOuter()))
+	if (Quantity == NewQty) return;
+	Quantity = NewQty;
+	NotifyChanged();
+}
+
+void UItemInstance::ActivateFragments(APawn* OwnerPawn)
+{
+	if (!OwnerPawn || !OwnerPawn->HasAuthority()) return;
+	
+	for (UFragment* Fragment : Fragments)
 	{
-		PU->OnRep_Item();
+		if (Fragment)
+		{
+			Fragment->Activate(OwnerPawn, this);
+		}
 	}
 }
 
-void UItemInstance::OnRep_Quantity()
+void UItemInstance::DeactivateFragments(APawn* OwnerPawn)
 {
-	if (UInventoryComponent* Inv = Cast<UInventoryComponent>(GetOuter()))
+	if (!OwnerPawn || !OwnerPawn->HasAuthority()) return;
+
+	for (UFragment* Fragment : Fragments)
 	{
-		Inv->OnInventoryChanged.Broadcast();
+		if (Fragment)
+		{
+			Fragment->Deactivate(OwnerPawn, this);
+		}
 	}
 }
 
-void UItemInstance::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
-{
-	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-	DOREPLIFETIME(UItemInstance, Def);
-	DOREPLIFETIME(UItemInstance, Quantity);
-	DOREPLIFETIME(UItemInstance, Durability);
-}
 
-//Helper para atualizar informações
+//Helper And replicate ----------------------------------------------------------------------------------------------------
+
 void UItemInstance::CopyFrom(const UItemInstance* Item)
 {
 	if (!Item) return;
 	Def = Item->Def;
 	Quantity = Item->Quantity;
 	Durability = Item->Durability;
+}
+void UItemInstance::NotifyChanged()
+{
+	if (UInventoryComponent* Inv = GetTypedOuter<UInventoryComponent>())
+	{
+		Inv->NotifyInvChanged();
+	}
+	
+	if (APickUp* PU = Cast<APickUp>(GetOuter()))
+	{
+		PU->OnRep_Item();
+	}
+}
+void UItemInstance::OnRep_Def()
+{
+	NotifyChanged();
+}
+void UItemInstance::OnRep_Quantity()
+{
+	NotifyChanged();
+}
+void UItemInstance::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+	DOREPLIFETIME(UItemInstance, Def);
+	DOREPLIFETIME(UItemInstance, Quantity);
+	DOREPLIFETIME(UItemInstance, Durability);
 }

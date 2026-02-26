@@ -24,20 +24,22 @@ public:
 	int32 EquippedSlot = 0;
 	
 	//Array de item
+	
 	UPROPERTY(ReplicatedUsing=OnRep_Slots, BlueprintReadOnly) TArray<TObjectPtr<UItemInstance>> Slots;
 	UPROPERTY(BlueprintAssignable, Category="Inventory") FOnInventoryChanged OnInventoryChanged;
+	
 	// internos
 	bool AddItem(const UItemInstance* Item, int32& QtyRemaining);
-	int32 TryAddStack(const UItemInstance* Item, int32& InOutQty);
+	int32 TryAddStack(const UItemInstance* Item, int32& Qty);
 	int32 NewStack(const UItemInstance* Item, int32 Qty);
 
 	//Funções replicadas
-	UFUNCTION(Server, Reliable) void Server_DropItem(int32 SlotIndex);
+	UFUNCTION(Server, Reliable, BlueprintCallable) void Server_DropItem(int32 SlotIndex);
 	UFUNCTION(Server, Reliable) void Server_SwapItem(int32 A, int32 B);
 	UFUNCTION(Server, Reliable, BlueprintCallable) void Server_TryPickup(AActor* Pickup);
 	UFUNCTION(Server, Reliable) void Server_PickupReplace(APickUp* Pickup, int32 SlotIndex);
 	
-
+	void NotifyInvChanged();
 
 	//Replicate
 	UFUNCTION()
