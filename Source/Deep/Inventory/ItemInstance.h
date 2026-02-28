@@ -3,6 +3,7 @@
 #include "UObject/Object.h"
 #include "ItemInstance.generated.h"
 
+class ABaseItem;
 class UFragment;
 class UItemDefinition;
 
@@ -12,7 +13,7 @@ class DEEP_API UItemInstance : public UObject
 	GENERATED_BODY()
 
 public:
-
+	
 	UPROPERTY(ReplicatedUsing=OnRep_Quantity, EditAnywhere, BlueprintReadWrite)
 	int32 Quantity = 1;
 
@@ -25,12 +26,15 @@ public:
 	UPROPERTY(EditDefaultsOnly, Instanced, BlueprintReadOnly, Category="Fragments")
 	TArray<TObjectPtr<UFragment>> Fragments;
 
+	UPROPERTY() ABaseItem* SpawnedActor = nullptr;
+	
 public:
 	
 	void SetQuantity(int32 NewQty);
 	virtual void ActivateFragments(APawn* OwnerPawn);
 	virtual void DeactivateFragments(APawn* OwnerPawn);
-	
+	virtual void SpawnItem(APawn* OwnerPawn);
+	virtual void DestroyItem(APawn* OwnerPawn);
 	
 	//Helper And replicate ----------------------------------------------------------------------------------------------------
 
@@ -44,5 +48,4 @@ public:
 	{
 		return GetOuter() ? GetOuter()->GetWorld() : nullptr;
 	}
-
 };
