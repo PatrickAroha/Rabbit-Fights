@@ -1,10 +1,13 @@
-// InventoryComponent.cpp
 #include "InventoryComponent.h"
+
+#include "Fragment.h"
 #include "Net/UnrealNetwork.h"
 #include "Engine/ActorChannel.h"
 #include "ItemInstance.h"
 #include "PickUp.h"
 #include "ItemDefinition.h"
+
+class UEquipItem_Fragment;
 
 UInventoryComponent::UInventoryComponent()
 {
@@ -12,31 +15,6 @@ UInventoryComponent::UInventoryComponent()
 	Slots.SetNum(3);
 }
 
-void UInventoryComponent::NotifyInvChanged()
-{
-	OnInventoryChanged.Broadcast();
-}
-
-void UInventoryComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
-{
-	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-	DOREPLIFETIME(UInventoryComponent, Slots);
-	DOREPLIFETIME(UInventoryComponent, EquippedSlot);
-}
-
-bool UInventoryComponent::ReplicateSubobjects(UActorChannel* Channel, FOutBunch* Bunch, FReplicationFlags* RepFlags)
-{
-	bool bWrote = Super::ReplicateSubobjects(Channel, Bunch, RepFlags);
-
-	for (UItemInstance* Item : Slots)
-	{
-		if (IsValid(Item))
-		{
-			bWrote |= Channel->ReplicateSubobject(Item, *Bunch, *RepFlags);
-		}
-	}
-	return bWrote;
-}
 
 // ======= Inventory Logic =======
 
@@ -99,18 +77,20 @@ bool UInventoryComponent::AddItem(const UItemInstance* Item, int32& QtyRemaining
 	{
 		QtyRemaining = NewStack(Item, QtyRemaining);
 	}
-
-	GetOwner()->ForceNetUpdate();
+	
 	return QtyRemaining != Start;
 }
 
 void UInventoryComponent::Server_TryPickup_Implementation(AActor* RecivedActor)
 {
-	APickUp* Pickup = Cast<APickUp>(RecivedActor);
 	if (!GetOwner() || !GetOwner()->HasAuthority()) return;
+	
+	APickUp* Pickup = Cast<APickUp>(RecivedActor);
+
 	if (!Pickup || !Pickup->Item || !Pickup->Item->Def || Pickup->Item->Quantity <= 0) return;
 
 	int32 QtyRemaining = Pickup->Item->Quantity;
+	
 	const bool bAddedItem = AddItem(Pickup->Item, QtyRemaining);
 
 	if (!bAddedItem)
@@ -123,8 +103,8 @@ void UInventoryComponent::Server_TryPickup_Implementation(AActor* RecivedActor)
 
 	if (Pickup->Item->Quantity <= 0) Pickup->Destroy();
 	else Pickup->ForceNetUpdate();
-
-	//NotifyInvChanged(); 
+	
+	Server_ChangeSlot(EquippedSlot); 
 	GetOwner()->ForceNetUpdate();
 }
 
@@ -145,6 +125,7 @@ void UInventoryComponent::Server_PickupReplace_Implementation(APickUp* Pickup, i
 	if (Remaining <= 0) Pickup->Destroy();
 	else Pickup->ForceNetUpdate();
 
+	Server_ChangeSlot(EquippedSlot); 
 	GetOwner()->ForceNetUpdate();
 }
 
@@ -155,7 +136,7 @@ void UInventoryComponent::Server_SwapItem_Implementation(int32 A, int32 B)
 
 	Swap(Slots[A], Slots[B]);
 
-	NotifyInvChanged();     
+	Server_ChangeSlot(EquippedSlot);   
 	GetOwner()->ForceNetUpdate();
 }
 
@@ -193,11 +174,93 @@ void UInventoryComponent::Server_DropItem_Implementation(int32 SlotIndex)
 
 	Slots[SlotIndex] = nullptr;
 
-	NotifyInvChanged();     
+	Server_ChangeSlot(EquippedSlot);    
 	OwnerActor->ForceNetUpdate();
 }
+
+// ============ Equip Logic ===============
+
+void UInventoryComponent::Server_ChangeSlot_Implementation(int32 NewSlot)
+{
+	if (!GetOwner() || !GetOwner()->HasAuthority()) return;
+	
+	if (!Slots.IsValidIndex(NewSlot) || !Slots.IsValidIndex(EquippedSlot)) return;
+	
+	UItemInstance* NewItem = Slots[NewSlot];
+	
+	if (!EquippedItem && !NewItem)
+	{
+		EquippedSlot = NewSlot;
+		OnRep_Slots();
+		return;
+	}
+	
+	if (EquippedItem != NewItem)
+	{
+		if (EquippedItem && EquippedItem->SpawnedActor)
+			UnequipItem(EquippedItem);
+		if (NewItem)
+			EquipItem(NewItem);
+
+		EquippedSlot = NewSlot;
+		OnRep_Slots();
+		return;
+	}
+	
+	if (EquippedItem == NewItem || (!EquippedItem && NewItem)) 
+	{
+		if (EquippedItem && EquippedItem->SpawnedActor)
+			UnequipItem(EquippedItem);
+		
+		if (NewItem)
+			EquipItem(NewItem);
+	}
+	
+	EquippedSlot = NewSlot;
+	OnRep_Slots();
+}
+
+void UInventoryComponent::EquipItem(UItemInstance* NewItemSlot)
+{
+	if (!NewItemSlot) return;
+	
+	NewItemSlot->SpawnItem(Cast<APawn>(GetOwner()));
+
+	EquippedItem = NewItemSlot;
+}
+
+void UInventoryComponent::UnequipItem(UItemInstance* OldItemSlot)
+{
+	if (!OldItemSlot) return;
+
+	OldItemSlot->DestroyItem(Cast<APawn>(GetOwner()));
+}
+
+
+//============= Replicate ===========
 
 void UInventoryComponent::OnRep_Slots()
 {
 	OnInventoryChanged.Broadcast(); 
+}
+
+void UInventoryComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+	DOREPLIFETIME(UInventoryComponent, Slots);
+	DOREPLIFETIME(UInventoryComponent, EquippedSlot);
+}
+
+bool UInventoryComponent::ReplicateSubobjects(UActorChannel* Channel, FOutBunch* Bunch, FReplicationFlags* RepFlags)
+{
+	bool bWrote = Super::ReplicateSubobjects(Channel, Bunch, RepFlags);
+
+	for (UItemInstance* Item : Slots)
+	{
+		if (IsValid(Item))
+		{
+			bWrote |= Channel->ReplicateSubobject(Item, *Bunch, *RepFlags);
+		}
+	}
+	return bWrote;
 }
