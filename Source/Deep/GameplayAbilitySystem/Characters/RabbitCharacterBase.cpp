@@ -20,6 +20,9 @@ ARabbitCharacterBase::ARabbitCharacterBase()
 
 	// Add the basic attribute set
 	BasicAttributeSet = CreateDefaultSubobject<UBasicAttributeSet>(TEXT("BasicAttributeSet"));
+
+	AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate
+	(UBasicAttributeSet::GetHealthAttribute()).AddUObject(this, &ARabbitCharacterBase::OnHealthChanged);
 }
 
 void ARabbitCharacterBase::CheckJumpInput(float DeltaTime)
@@ -61,6 +64,17 @@ void ARabbitCharacterBase::PossessedBy(AController* NewController)
 	}
 }
 
+void ARabbitCharacterBase::OnRep_PlayerState()
+{
+	Super::OnRep_PlayerState();
+
+	if (AbilitySystemComponent)
+	{
+		AbilitySystemComponent->InitAbilityActorInfo(this, this);
+		GenerateWidgetOnSpawn();
+	}
+}
+
 // Called every frame
 void ARabbitCharacterBase::Tick(float DeltaTime)
 {
@@ -73,17 +87,6 @@ void ARabbitCharacterBase::SetupPlayerInputComponent(UInputComponent* PlayerInpu
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 
-}
-
-void ARabbitCharacterBase::OnRep_PlayerState()
-{
-	Super::OnRep_PlayerState();
-
-	if (AbilitySystemComponent)
-	{
-		AbilitySystemComponent->InitAbilityActorInfo(this, this);
-		GenerateWidgetOnSpawn();
-	}
 }
 
 UAbilitySystemComponent* ARabbitCharacterBase::GetAbilitySystemComponent() const
@@ -129,3 +132,12 @@ void ARabbitCharacterBase::SendAbilitiesChangedEvent()
 
 	UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(this, EventData.EventTag, EventData);
 }
+
+void ARabbitCharacterBase::OnHealthChanged(const FOnAttributeChangeData& Data)
+{
+	if (Data.NewValue <= 0.f)
+	{
+		Die();
+	}
+}
+

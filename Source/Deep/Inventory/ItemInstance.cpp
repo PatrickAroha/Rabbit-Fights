@@ -82,6 +82,8 @@ void UItemInstance::SpawnItem(APawn* OwnerPawn)
 	}
 
 	SpawnedActor->InitFromInstance(this);
+
+	ActivateFragments(OwnerPawn);
 }
 
 void UItemInstance::DestroyItem(APawn* OwnerPawn)
@@ -90,6 +92,7 @@ void UItemInstance::DestroyItem(APawn* OwnerPawn)
 
 	if (IsValid(SpawnedActor))
 	{
+		DeactivateFragments(OwnerPawn);
 		SpawnedActor->Destroy();
 		SpawnedActor = nullptr;
 	}
