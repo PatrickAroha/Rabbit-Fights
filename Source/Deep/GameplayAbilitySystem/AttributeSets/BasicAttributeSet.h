@@ -10,6 +10,9 @@
 /**
  * 
  */
+
+DECLARE_MULTICAST_DELEGATE_ThreeParams( FOnDamageReceived, AActor* /*Victim*/, AActor* /*Instigator*/, AActor* /*WeaponDamage*/);
+
 UCLASS()
 class DEEP_API UBasicAttributeSet : public UAttributeSet
 {
@@ -37,7 +40,10 @@ public:
 	FGameplayAttributeData MaxStamina;
 	ATTRIBUTE_ACCESSORS_BASIC(UBasicAttributeSet, MaxStamina)
 
+	FOnDamageReceived OnDamageReceived;
+
 public:
+	
 	UFUNCTION()
 	void OnRep_Health(const FGameplayAttributeData& OldValue) const
 	{
@@ -61,6 +67,8 @@ public:
 	{
 		GAMEPLAYATTRIBUTE_REPNOTIFY(UBasicAttributeSet, MaxStamina, OldValue);
 	}
+
+	void OnIncomingDamage(const struct FGameplayEffectModCallbackData& Data);
 
 	virtual void GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const override;
 

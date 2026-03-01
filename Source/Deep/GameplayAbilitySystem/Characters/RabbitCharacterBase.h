@@ -32,7 +32,8 @@ public:
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "AbilitySystem")
 	EGameplayEffectReplicationMode ASCReplicationMode = EGameplayEffectReplicationMode::Mixed;
-protected:
+
+	
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
@@ -62,6 +63,10 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "AbilitySystem")
 	void SendAbilitiesChangedEvent();
+
+	void OnHealthChanged(const FOnAttributeChangeData& Data);
+
+	UFUNCTION(BlueprintImplementableEvent) void Die();
 };
 		
 		

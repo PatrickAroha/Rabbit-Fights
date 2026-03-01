@@ -244,6 +244,7 @@ void UInventoryComponent::OnRep_Slots()
 	OnInventoryChanged.Broadcast(); 
 }
 
+
 void UInventoryComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);

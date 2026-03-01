@@ -26,7 +26,7 @@ public:
 	UPROPERTY(EditDefaultsOnly, Instanced, BlueprintReadOnly, Category="Fragments")
 	TArray<TObjectPtr<UFragment>> Fragments;
 
-	UPROPERTY() ABaseItem* SpawnedActor = nullptr;
+	UPROPERTY(BlueprintReadOnly) ABaseItem* SpawnedActor = nullptr;
 	
 public:
 	

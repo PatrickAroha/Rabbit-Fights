@@ -25,7 +25,7 @@ public:
 	void UnequipItem(UItemInstance* OldItemSlot);
 
 	UPROPERTY(Replicated, BlueprintReadWrite) int32 EquippedSlot = 0;
-	UPROPERTY() UItemInstance* EquippedItem = nullptr;
+	UPROPERTY(Replicated, BlueprintReadOnly) UItemInstance* EquippedItem = nullptr;
 	UPROPERTY(ReplicatedUsing=OnRep_Slots, BlueprintReadOnly) TArray<TObjectPtr<UItemInstance>> Slots;
 	UPROPERTY(BlueprintAssignable, Category="Inventory") FOnInventoryChanged OnInventoryChanged;
 	

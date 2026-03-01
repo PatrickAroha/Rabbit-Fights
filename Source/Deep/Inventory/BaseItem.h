@@ -14,5 +14,7 @@ public:
 
 	ABaseItem();
 	
+	
+	
 	virtual void InitFromInstance(class UItemInstance* Instance);
 };
