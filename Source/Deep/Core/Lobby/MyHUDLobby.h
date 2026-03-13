@@ -14,6 +14,7 @@ class DEEP_API AMyHUDLobby : public AHUD
 	GENERATED_BODY()
 
 public:
+	
 	UFUNCTION(BlueprintImplementableEvent)
 	void CreateHudLobby(APlayerState* PS);
 
