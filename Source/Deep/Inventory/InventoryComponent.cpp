@@ -6,6 +6,7 @@
 #include "ItemInstance.h"
 #include "PickUp.h"
 #include "ItemDefinition.h"
+#include "Deep/MagicManager/MagicManager.h"
 
 class UEquipItem_Fragment;
 
@@ -81,52 +82,65 @@ bool UInventoryComponent::AddItem(const UItemInstance* Item, int32& QtyRemaining
 	return QtyRemaining != Start;
 }
 
-void UInventoryComponent::Server_TryPickup_Implementation(AActor* RecivedActor)
+UItemInstance* UInventoryComponent::TryPickUpItem(UItemInstance* RecivedItem)
 {
-	if (!GetOwner() || !GetOwner()->HasAuthority()) return;
-	
-	APickUp* Pickup = Cast<APickUp>(RecivedActor);
+	if (!GetOwner() || !GetOwner()->HasAuthority()) return RecivedItem;
 
-	if (!Pickup || !Pickup->Item || !Pickup->Item->Def || Pickup->Item->Quantity <= 0) return;
-
-	int32 QtyRemaining = Pickup->Item->Quantity;
+	if (!RecivedItem || !RecivedItem->Def || RecivedItem->Quantity <= 0) return RecivedItem;
 	
-	const bool bAddedItem = AddItem(Pickup->Item, QtyRemaining);
+	// Se Magia Manda item Para MagicManager
+	if (RecivedItem->Def->ItemCategory == EItemCategory::Magic)
+	{
+		if (UMagicManager* Magic = GetOwner()->FindComponentByClass<UMagicManager>())
+		{
+			UItemInstance* Result = Magic->TryCollectMagic(RecivedItem);
+			
+			if (!Result)
+			{
+				return nullptr;
+			}
+			
+			return RecivedItem;
+		}
+	}
+	
+	int32 QtyRemaining = RecivedItem->Quantity;
+	
+	const bool bAddedItem = AddItem(RecivedItem, QtyRemaining);
 
 	if (!bAddedItem)
 	{
-		Server_PickupReplace_Implementation(Pickup, EquippedSlot);
-		return;
+		RecivedItem = PickupReplace(RecivedItem, EquippedSlot);
+		return RecivedItem;
 	}
 
-	Pickup->Item->SetQuantity(QtyRemaining);
-
-	if (Pickup->Item->Quantity <= 0) Pickup->Destroy();
-	else Pickup->ForceNetUpdate();
+	RecivedItem->SetQuantity(QtyRemaining);
 	
 	Server_ChangeSlot(EquippedSlot); 
 	GetOwner()->ForceNetUpdate();
+	
+	return RecivedItem;
+	
 }
 
-void UInventoryComponent::Server_PickupReplace_Implementation(APickUp* Pickup, int32 SlotIndex)
+UItemInstance* UInventoryComponent::PickupReplace(UItemInstance* RecivedItem, int32 SlotIndex)
 {
-	if (!GetOwner() || !GetOwner()->HasAuthority()) return;
-	if (!Pickup || !Pickup->Item || !Pickup->Item->Def || Pickup->Item->Quantity <= 0) return;
-	if (SlotIndex < 0 || SlotIndex >= Slots.Num()) return;
-	if (!Slots[SlotIndex]) return;
+	if (!GetOwner() || !GetOwner()->HasAuthority()) return RecivedItem;
+	if (!RecivedItem || !RecivedItem->Def || RecivedItem->Quantity <= 0) return RecivedItem;
+	if (SlotIndex < 0 || SlotIndex >= Slots.Num()) return RecivedItem;
+	if (!Slots[SlotIndex]) return RecivedItem;
 
 	Server_DropItem_Implementation(SlotIndex);
 
-	int32 Remaining = Pickup->Item->Quantity;
-	Remaining = NewStack(Pickup->Item, Remaining);
+	int32 Remaining = RecivedItem->Quantity;
+	Remaining = NewStack(RecivedItem, Remaining);
 
-	Pickup->Item->SetQuantity(Remaining);
-
-	if (Remaining <= 0) Pickup->Destroy();
-	else Pickup->ForceNetUpdate();
+	RecivedItem->SetQuantity(Remaining);
 
 	Server_ChangeSlot(EquippedSlot); 
 	GetOwner()->ForceNetUpdate();
+	
+	return RecivedItem;
 }
 
 void UInventoryComponent::Server_SwapItem_Implementation(int32 A, int32 B)

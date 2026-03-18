@@ -1,6 +1,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "ItemInstance.h"
 #include "UObject/Object.h"
 #include "Fragment.generated.h"
 

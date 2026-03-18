@@ -1,6 +1,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Abilities/GameplayAbility.h"
 #include "ItemDefinition.generated.h"
 
 class ABaseItem;
@@ -14,6 +15,13 @@ enum class EItemType : uint8
 	Throwable UMETA(DisplayName = "Throwable")
 };
 
+UENUM(BlueprintType)
+enum class EItemCategory : uint8
+{
+	Item UMETA(DisplayName = "Item"),
+	Magic UMETA(DisplayName = "Magic")
+}; 
+
 UCLASS(BlueprintType, Blueprintable)
 class DEEP_API UItemDefinition : public UPrimaryDataAsset
 {
@@ -21,22 +29,37 @@ class DEEP_API UItemDefinition : public UPrimaryDataAsset
 
 public:
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Stack")
-	bool bStackable = true;
+	//======= Base =========
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Stack", meta=(ClampMin="1"))
-	int32 MaxStack = 99;
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Design")
-	UTexture2D* ItemIcon;
+	UPROPERTY(EditDefaultsOnly)
+	EItemCategory ItemCategory;
 	
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Design")
+	UPROPERTY(EditDefaultsOnly)
+	FText Name;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+	UTexture2D* ItemIcon;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 	TObjectPtr<UStaticMesh> Mesh;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="SpawnActor")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
 	TSubclassOf<APickUp> PickupClass;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="ItemType")
+	// ===== ITEM =====
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, meta=(EditCondition="ItemCategory == EItemCategory::Item", EditConditionHides))
 	TSubclassOf<ABaseItem> ActorItemClass;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, meta=(EditCondition="ItemCategory == EItemCategory::Item", EditConditionHides))
+	bool bStackable = true;
+	
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, meta=(EditCondition="ItemCategory == EItemCategory::Item", EditConditionHides , ClampMin="1"))
+	int32 MaxStack = 99;
+
+	// ===== MAGIC =====
+	
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, meta=(EditCondition="ItemCategory == EItemCategory::Magic", EditConditionHides))
+	TSubclassOf<UGameplayAbility> AbilityClass;
 	
 };
