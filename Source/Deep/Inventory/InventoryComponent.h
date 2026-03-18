@@ -30,16 +30,15 @@ public:
 	UPROPERTY(BlueprintAssignable, Category="Inventory") FOnInventoryChanged OnInventoryChanged;
 	
 	// internos
-	
 	bool AddItem(const UItemInstance* Item, int32& QtyRemaining);
 	int32 TryAddStack(const UItemInstance* Item, int32& Qty);
 	int32 NewStack(const UItemInstance* Item, int32 Qty);
 
 	//Funções replicadas
-	UFUNCTION(Server, Reliable, BlueprintCallable) void Server_TryPickup(AActor* Pickup);
+	UFUNCTION(BlueprintCallable) UItemInstance* TryPickUpItem(UItemInstance* RecivedItem);
 	UFUNCTION(Server, Reliable, BlueprintCallable) void Server_DropItem(int32 SlotIndex);
 	UFUNCTION(Server, Reliable) void Server_SwapItem(int32 A, int32 B);
-	UFUNCTION(Server, Reliable) void Server_PickupReplace(APickUp* Pickup, int32 SlotIndex);
+	UFUNCTION() UItemInstance* PickupReplace(UItemInstance* RecivedItem, int32 SlotIndex);
 
 	//Replicate
 	UFUNCTION() void OnRep_Slots();

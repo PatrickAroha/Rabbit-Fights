@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Deep/Interfaces/Interactable.h"
 #include "GameFramework/Actor.h"
 #include "PickUp.generated.h"
 
@@ -10,13 +11,19 @@ class UItemInstance;
 class UStaticMeshComponent;
 
 UCLASS()
-class DEEP_API APickUp : public AActor
+class DEEP_API APickUp : public AActor, public IInteractable
 {
 	GENERATED_BODY()
 
 public:
 
 	APickUp();
+
+	virtual void Interact_Implementation(APawn* Player);
+	
+	UFUNCTION(Server, Reliable, BlueprintCallable)
+	void Server_Interact(APawn* Player);
+	
 	void BeginPlay();
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="PickUp")

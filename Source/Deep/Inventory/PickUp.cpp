@@ -1,7 +1,5 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
-
 #include "PickUp.h"
+#include "InventoryComponent.h"
 #include "ItemDefinition.h"
 #include "ItemInstance.h"
 #include "Net/UnrealNetwork.h"
@@ -17,7 +15,32 @@ APickUp::APickUp()
 	
 	bReplicates = true;
 	AActor::SetReplicateMovement(true);
+}
 
+void APickUp::Interact_Implementation(APawn* Player)
+{
+	IInteractable::Interact_Implementation(Player);
+
+	Server_Interact(Player);
+}
+
+void APickUp::Server_Interact_Implementation(APawn* Player)
+{
+	if (!Player) return;
+
+	if (UInventoryComponent* Inv = Player->FindComponentByClass<UInventoryComponent>())
+	{
+		UItemInstance* ResultItem = Inv->TryPickUpItem(Item);
+		
+		if (ResultItem && ResultItem->Quantity > 0)
+		{
+			Item = ResultItem;
+			ForceNetUpdate();
+			return;
+		}
+		
+		Destroy();
+	}
 }
 
 void APickUp::BeginPlay()
@@ -25,7 +48,6 @@ void APickUp::BeginPlay()
 	Super::BeginPlay();
 	RefreshMesh();
 }
-
 
 void APickUp::OnRep_Item()
 {
