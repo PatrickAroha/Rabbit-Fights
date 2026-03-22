@@ -23,10 +23,11 @@ public:
 	UPROPERTY(ReplicatedUsing=OnRep_Def, EditAnywhere, BlueprintReadWrite)
 	TObjectPtr<UItemDefinition> Def = nullptr;
 
-	UPROPERTY(EditDefaultsOnly, Instanced, BlueprintReadOnly, Category="Fragments")
+	UPROPERTY(EditAnywhere, Instanced, BlueprintReadOnly, Category="Fragments")
 	TArray<TObjectPtr<UFragment>> Fragments;
 
-	UPROPERTY(BlueprintReadOnly) ABaseItem* SpawnedActor = nullptr;
+	UPROPERTY(BlueprintReadOnly)
+	ABaseItem* SpawnedActor = nullptr;
 	
 public:
 	
