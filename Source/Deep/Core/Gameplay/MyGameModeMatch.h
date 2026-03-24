@@ -10,6 +10,7 @@ class DEEP_API AMyGameModeMatch : public AGameMode
 	GENERATED_BODY()
 
 protected:
+	
 	UPROPERTY()
 	TObjectPtr<class UMyGameInstance> MyGI;
 
@@ -20,7 +21,9 @@ protected:
 
 	UFUNCTION(BlueprintImplementableEvent)
 	void OnInitGame();
+	
 public:
+	
 	UFUNCTION(BlueprintPure, Category="Refs")
 	UMyGameInstance* GetMyGI() const { return MyGI; }
 
