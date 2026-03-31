@@ -19,11 +19,15 @@ protected:
 	UPROPERTY() AActor* LastDamageInstigator = nullptr;
 	UPROPERTY() AActor* LastUsedWeapon = nullptr;
 	UPROPERTY() UBasicAttributeSet* Attributes;
+	
+	FTimerHandle ResetDamageInstigatorTimerHandle;
 
 public:
 	UPROPERTY(BlueprintReadOnly) bool bIsDead = false;
 	
 protected:
+
+	UFUNCTION() void ResetDamageInstigator();
 	
 	virtual void BeginPlay() override;
 
