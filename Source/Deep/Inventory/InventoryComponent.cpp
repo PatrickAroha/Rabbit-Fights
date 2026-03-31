@@ -129,6 +129,7 @@ UItemInstance* UInventoryComponent::PickupReplace(UItemInstance* RecivedItem, in
 	if (!RecivedItem || !RecivedItem->Def || RecivedItem->Quantity <= 0) return RecivedItem;
 	if (SlotIndex < 0 || SlotIndex >= Slots.Num()) return RecivedItem;
 	if (!Slots[SlotIndex]) return RecivedItem;
+	if (Slots[SlotIndex]->Def->ByMinigame) return RecivedItem;
 
 	Server_DropItem_Implementation(SlotIndex);
 
@@ -161,6 +162,7 @@ void UInventoryComponent::Server_DropItem_Implementation(int32 SlotIndex)
 
 	UItemInstance* Item = Slots[SlotIndex];
 	if (!Item || !Item->Def || Item->Quantity <= 0) return;
+	if (Item->Def->ByMinigame) return;
 
 	AActor* OwnerActor = GetOwner();
 	UWorld* World = OwnerActor->GetWorld();

@@ -39,6 +39,9 @@ public:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
 	UTexture2D* ItemIcon;
+	
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+	bool ByMinigame;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 	TObjectPtr<UStaticMesh> Mesh;

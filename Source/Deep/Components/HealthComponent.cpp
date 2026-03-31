@@ -1,8 +1,6 @@
 #include "HealthComponent.h"
 #include "Deep/GameplayAbilitySystem/AttributeSets/BasicAttributeSet.h"
 
-
-
 void UHealthComponent::BeginPlay()
 {
 	Super::BeginPlay();
@@ -20,15 +18,31 @@ void UHealthComponent::BeginPlay()
 	}
 }
 
-
 void UHealthComponent::HandleDamage(AActor* Victim,  AActor* Instigator,  AActor* Weapon)
 {
 	LastDamageInstigator = Instigator;
 	LastUsedWeapon = Weapon;
 
+	if (UWorld* World = GetWorld())
+	{
+		World->GetTimerManager().ClearTimer(ResetDamageInstigatorTimerHandle);
+		World->GetTimerManager().SetTimer(
+			ResetDamageInstigatorTimerHandle,
+			this,
+			&UHealthComponent::ResetDamageInstigator,
+			15.0f,
+			false
+		);
+	}
+	
 	if (Attributes && Attributes->GetHealth() <= 0 && !bIsDead)
 	{
 		bIsDead = true;
 		Die(LastDamageInstigator, Weapon);
 	}
+}
+
+void UHealthComponent::ResetDamageInstigator()
+{
+	LastDamageInstigator = nullptr;
 }
