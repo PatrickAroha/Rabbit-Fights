@@ -6,12 +6,13 @@
 #include "GameFramework/Character.h"
 #include "AbilitySystemInterface.h"
 #include "AbilitySystemComponent.h"
+#include "InterfacePlayerInfo.h"
 #include "RabbitCharacterBase.generated.h"
 
 class UBasicAttributeSet;
 
 UCLASS()
-class DEEP_API ARabbitCharacterBase : public ACharacter, public IAbilitySystemInterface
+class DEEP_API ARabbitCharacterBase : public ACharacter, public IAbilitySystemInterface, public IInterfacePlayerInfo
 {
 	GENERATED_BODY()
 
@@ -29,6 +30,9 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "AbilitySystem")
 	UBasicAttributeSet* BasicAttributeSet;
 
+	UPROPERTY(Replicated, EditAnywhere, BlueprintReadWrite)
+	bool bMagicMode = false;
+
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "AbilitySystem")
 	EGameplayEffectReplicationMode ASCReplicationMode = EGameplayEffectReplicationMode::Mixed;
@@ -37,6 +41,8 @@ protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
+	virtual bool CanDoAction_Implementation() const override { return bMagicMode; }
+	
 	virtual void PossessedBy(AController* NewController) override;
 
 	virtual void OnRep_PlayerState() override;
@@ -65,6 +71,8 @@ public:
 	void SendAbilitiesChangedEvent();
 
 	void OnHealthChanged(const FOnAttributeChangeData& Data);
+
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
 	UFUNCTION(BlueprintImplementableEvent) void Die();
 };

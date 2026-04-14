@@ -6,6 +6,7 @@
 #include "AbilitySystemBlueprintLibrary.h"
 #include "Deep/GameplayAbilitySystem/RabbitAbilitySystemComponent.h"
 #include "Deep/GameplayAbilitySystem/AttributeSets/BasicAttributeSet.h"
+#include "Net/UnrealNetwork.h"
 
 // Sets default values
 ARabbitCharacterBase::ARabbitCharacterBase()
@@ -139,5 +140,12 @@ void ARabbitCharacterBase::OnHealthChanged(const FOnAttributeChangeData& Data)
 	{
 		Die();
 	}
+}
+
+void ARabbitCharacterBase::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(ARabbitCharacterBase, bMagicMode);
 }
 

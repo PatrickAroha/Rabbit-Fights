@@ -1,4 +1,6 @@
 #include "MagicManager.h"
+
+#include "Deep/GameplayAbilitySystem/Characters/InterfacePlayerInfo.h"
 #include "Deep/Inventory/PickUp.h"
 #include "Deep/Inventory/ItemDefinition.h"
 #include "Engine/ActorChannel.h"
@@ -24,6 +26,10 @@ UItemInstance* UMagicManager::TryCollectMagic(UItemInstance* MagicItem)
 		UpdateSlot(Slot, MagicItem);
 		ChangedSlot = Slot;
 		OnMagicAdded.Broadcast(Slot);
+		if (Slot == int32(SelectedSlot))
+			if (IInterfacePlayerInfo::Execute_CanDoAction(GetOwner()))
+				Server_ChangeSlot(SelectedSlot);
+
 		return nullptr;
 	}
 
@@ -39,6 +45,8 @@ UItemInstance* UMagicManager::TryCollectMagic(UItemInstance* MagicItem)
 	ChangedSlot = ReplaceSlot;
 	OnMagicAdded.Broadcast(Slot);
 
+	Server_ChangeSlot(SelectedSlot);
+
 	return Temp;
 }
 
@@ -49,7 +57,7 @@ void UMagicManager::UpdateSlot(int32 Slot, UItemInstance* NewMagic)
 	// remove se já tiver
 	if (MagicHandles[Slot].IsValid())
 	{
-		RemoveMagicAbility(MagicHandles[Slot]);
+		RemoveMagicAbility(MagicHandles[Slot], Slot);
 	}
 
 	// adiciona nova
@@ -58,8 +66,9 @@ void UMagicManager::UpdateSlot(int32 Slot, UItemInstance* NewMagic)
 
 	Magics[Slot] = NewMagic;
 	MagicHandles[Slot] = Handle;
-
+	
 	OnMagicAdded.Broadcast(Slot);
+	
 }
 
 FGameplayAbilitySpecHandle UMagicManager::GiveMagicAbility(UItemInstance* MagicItem)
@@ -76,13 +85,62 @@ FGameplayAbilitySpecHandle UMagicManager::GiveMagicAbility(UItemInstance* MagicI
 	return ASC->GiveAbility(Spec);
 }
 
-void UMagicManager::RemoveMagicAbility(FGameplayAbilitySpecHandle Handle)
+void UMagicManager::RemoveMagicAbility(FGameplayAbilitySpecHandle Handle, int32 Slot)
 {
 	if (!Handle.IsValid()) return;
 
 	if (UAbilitySystemComponent* ASC = GetOwner()->FindComponentByClass<UAbilitySystemComponent>())
 	{
 		ASC->ClearAbility(Handle);
+	}
+	
+	Magics[Slot] = nullptr;
+	OnMagicAdded.Broadcast(Slot);
+	
+}
+
+void UMagicManager::Server_RemoveMagicAbility_Implementation(EMagicSlot Slot)
+{
+	int32 Index = int32(Slot);
+	FGameplayAbilitySpecHandle Handle = MagicHandles[Index];
+	RemoveMagicAbility(Handle, Index);
+}
+
+void UMagicManager::UnequipMagic(EMagicSlot LastSlot)
+{
+	int32 OldIndex = int32(LastSlot);
+	
+	if (OldIndex < 0 || OldIndex > 2 || !Magics.IsValidIndex(OldIndex)) return;
+	if (!Magics[OldIndex] || !Magics[OldIndex]->Def) return;
+	
+	if (UAbilitySystemComponent* ASC = GetOwner()->FindComponentByClass<UAbilitySystemComponent>())
+	{
+		ASC->RemoveGameplayCue(Magics[OldIndex]->Def->CueMagicHand);
+	}
+}
+
+void UMagicManager::Server_RSUnequipMagic_Implementation(EMagicSlot Slot)
+{
+	UnequipMagic(Slot);
+}
+
+void UMagicManager::Server_ChangeSlot_Implementation(EMagicSlot Slot)
+{
+	int32 Index = (int32)Slot;
+	if (Index < 0 || Index > 2) return;
+	
+	EMagicSlot OldSlot = SelectedSlot;
+	SelectedSlot = Slot;
+	OnSlotSelected.Broadcast(SelectedSlot);
+
+	UnequipMagic(OldSlot);
+
+	if (!Magics.IsValidIndex(Index) || !Magics[Index] || !Magics[Index]->Def) return;
+	
+	if (UAbilitySystemComponent* ASC = GetOwner()->FindComponentByClass<UAbilitySystemComponent>())
+	{
+		FGameplayCueParameters CueParams;
+		ASC->AddGameplayCue(Magics[Index]->Def->CueMagicHand, CueParams);
 	}
 }
 
@@ -122,7 +180,8 @@ void UMagicManager::Server_DropMagic_Implementation(uint8 Slot)
 		Pickup->Item->SetQuantity(1);
 		Pickup->RefreshMesh();
 
-		RemoveMagicAbility(MagicHandles[Slot]);
+		UnequipMagic(SelectedSlot);
+		RemoveMagicAbility(MagicHandles[Slot], Slot);
 
 		Magics[Slot] = nullptr;
 		MagicHandles[Slot] = FGameplayAbilitySpecHandle();
@@ -143,14 +202,15 @@ void UMagicManager::Server_SwapMagics_Implementation()
 	Swap(MagicHandles[Index], MagicHandles[Next]);
 }
 
-void UMagicManager::ActiveMagic_Implementation(EMagicSlot Slot)
+void UMagicManager::Server_ActiveMagic_Implementation(EMagicSlot Slot)
 {
 	int32 Index = (int32)Slot;
 
 	if (!Magics[Index]) return;
-
+	
 	if (UAbilitySystemComponent* ASC = GetOwner()->FindComponentByClass<UAbilitySystemComponent>())
 	{
+		FGameplayEventData Payload;
 		ASC->TryActivateAbility(MagicHandles[Index]);
 	}
 }
@@ -178,6 +238,11 @@ void UMagicManager::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLif
 	DOREPLIFETIME(UMagicManager, MagicHandles);
 	DOREPLIFETIME(UMagicManager, SelectedSlot);
 	DOREPLIFETIME(UMagicManager, ChangedSlot);
+}
+
+void UMagicManager::OnRep_SelectedSlot()
+{
+	OnSlotSelected.Broadcast(SelectedSlot);
 }
 
 int32 UMagicManager::GetFreeSlot() const

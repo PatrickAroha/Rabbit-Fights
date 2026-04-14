@@ -20,8 +20,13 @@ public:
 
 	UInventoryComponent();
 
-	UFUNCTION(Server, Reliable, BlueprintCallable)void Server_ChangeSlot(int32 NewSlot);
+	UFUNCTION(Server, Reliable, BlueprintCallable)
+	void Server_ChangeSlot(int32 NewSlot);
+
+	UFUNCTION(Server, Reliable, BlueprintCallable)
 	void EquipItem(UItemInstance* OldItemSlot);
+
+	UFUNCTION(Server, Reliable, BlueprintCallable)
 	void UnequipItem(UItemInstance* OldItemSlot);
 
 	UPROPERTY(Replicated, BlueprintReadWrite) int32 EquippedSlot = 0;
