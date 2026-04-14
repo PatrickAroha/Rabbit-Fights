@@ -1,11 +1,11 @@
 #include "InventoryComponent.h"
-
 #include "Fragment.h"
 #include "Net/UnrealNetwork.h"
 #include "Engine/ActorChannel.h"
 #include "ItemInstance.h"
 #include "PickUp.h"
 #include "ItemDefinition.h"
+#include "Deep/GameplayAbilitySystem/Characters/InterfacePlayerInfo.h"
 #include "Deep/MagicManager/MagicManager.h"
 
 class UEquipItem_Fragment;
@@ -236,16 +236,19 @@ void UInventoryComponent::Server_ChangeSlot_Implementation(int32 NewSlot)
 	OnRep_Slots();
 }
 
-void UInventoryComponent::EquipItem(UItemInstance* NewItemSlot)
+void UInventoryComponent::EquipItem_Implementation(UItemInstance* NewItemSlot)
 {
 	if (!NewItemSlot) return;
+
+	if (IInterfacePlayerInfo::Execute_CanDoAction(GetOwner()))
+		return;
 	
 	NewItemSlot->SpawnItem(Cast<APawn>(GetOwner()));
 
 	EquippedItem = NewItemSlot;
 }
 
-void UInventoryComponent::UnequipItem(UItemInstance* OldItemSlot)
+void UInventoryComponent::UnequipItem_Implementation(UItemInstance* OldItemSlot)
 {
 	if (!OldItemSlot) return;
 

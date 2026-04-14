@@ -4,6 +4,7 @@
 #include "InventoryComponent.h"
 #include "ItemDefinition.h"
 #include "PickUp.h"
+#include "Deep/GameplayAbilitySystem/Characters/InterfacePlayerInfo.h"
 #include "Deep/Inventory/Fragment.h"
 #include "Net/UnrealNetwork.h"
 
@@ -92,7 +93,7 @@ void UItemInstance::DestroyItem(APawn* OwnerPawn)
 
 	if (IsValid(SpawnedActor))
 	{
-		DeactivateFragments(OwnerPawn);
+		//DeactivateFragments(OwnerPawn);
 		SpawnedActor->Destroy();
 		SpawnedActor = nullptr;
 	}

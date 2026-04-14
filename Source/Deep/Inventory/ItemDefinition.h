@@ -60,9 +60,15 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, meta=(EditCondition="ItemCategory == EItemCategory::Item", EditConditionHides , ClampMin="1"))
 	int32 MaxStack = 99;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+	UTexture2D* WeaponType;
+
 	// ===== MAGIC =====
 	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, meta=(EditCondition="ItemCategory == EItemCategory::Magic", EditConditionHides))
 	TSubclassOf<UGameplayAbility> AbilityClass;
+
+	UPROPERTY(EditDefaultsOnly)
+	FGameplayTag CueMagicHand;
 	
 };
