@@ -211,6 +211,7 @@ void UMagicManager::Server_ActiveMagic_Implementation(EMagicSlot Slot)
 	if (UAbilitySystemComponent* ASC = GetOwner()->FindComponentByClass<UAbilitySystemComponent>())
 	{
 		FGameplayEventData Payload;
+		ASC->TargetCancel();
 		ASC->TryActivateAbility(MagicHandles[Index]);
 	}
 }
