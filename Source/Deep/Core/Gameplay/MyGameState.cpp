@@ -21,10 +21,10 @@ void AMyGameState::SetMatchPhase(EMatchPhase NewPhase)
 	MatchPhase = NewPhase;
 	
 	OnPhaseChanged(MatchPhase);
-	
-	OnMatchPhaseChanged.Broadcast(Old, NewPhase);
-	
+
+	OnRep_MatchPhase(Old);
 }
+
 
 void AMyGameState::SetMatchPointsToEndGame(int32 MatchPoints)
 {
@@ -45,5 +45,6 @@ void AMyGameState::Countdown(float DurationSeconds)
 
 void AMyGameState::OnRep_MatchPhase(EMatchPhase OldPhase)
 {
+	OnPhaseChanged(MatchPhase);
 	OnMatchPhaseChanged.Broadcast(OldPhase, MatchPhase);
 }
