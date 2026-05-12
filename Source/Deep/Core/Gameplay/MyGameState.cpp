@@ -41,10 +41,10 @@ void AMyGameState::Countdown(float DurationSeconds)
 	const float ServerNow = GetServerWorldTimeSeconds();
 	
 	CountdownEndTime = FMath::CeilToInt32(ServerNow + DurationSeconds);
-}
+}                                                                                               
 
 void AMyGameState::OnRep_MatchPhase(EMatchPhase OldPhase)
 {
-	OnPhaseChanged(MatchPhase);
+	//OnPhaseChanged(MatchPhase);
 	OnMatchPhaseChanged.Broadcast(OldPhase, MatchPhase);
 }
