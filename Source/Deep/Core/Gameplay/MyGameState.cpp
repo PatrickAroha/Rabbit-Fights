@@ -25,7 +25,6 @@ void AMyGameState::SetMatchPhase(EMatchPhase NewPhase)
 	OnRep_MatchPhase(Old);
 }
 
-
 void AMyGameState::SetMatchPointsToEndGame(int32 MatchPoints)
 {
 	TotalMatchPoints = MatchPoints;
