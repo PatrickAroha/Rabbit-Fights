@@ -236,6 +236,36 @@ void UInventoryComponent::Server_ChangeSlot_Implementation(int32 NewSlot)
 	OnRep_Slots();
 }
 
+void UInventoryComponent::Server_ConsumeItem_Implementation(int32 SlotIndex, int32 Amount)
+{
+	if (!GetOwner() || !GetOwner()->HasAuthority()) return;
+	if (!Slots.IsValidIndex(SlotIndex)) return;
+	if (Amount <= 0) return;
+
+	UItemInstance* Item = Slots[SlotIndex];
+	if (!Item || !Item->Def || Item->Quantity <= 0) return;
+
+	const int32 NewQuantity = Item->Quantity - Amount;
+
+	if (NewQuantity > 0)
+	{
+		Item->SetQuantity(NewQuantity);
+	}
+	else
+	{
+		if (EquippedItem == Item)
+		{
+			UnequipItem(Item);
+			EquippedItem = nullptr;
+		}
+
+		Slots[SlotIndex] = nullptr;
+	}
+
+	OnRep_Slots();
+	GetOwner()->ForceNetUpdate();
+}
+
 void UInventoryComponent::EquipItem_Implementation(UItemInstance* NewItemSlot)
 {
 	if (!NewItemSlot) return;

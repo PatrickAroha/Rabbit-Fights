@@ -22,6 +22,7 @@ public:
 	ARabbitCharacterBase();
 	
 	virtual void CheckJumpInput(float DeltaTime) override;
+	virtual void FellOutOfWorld(const class UDamageType& dmgType) override;
 	
 	// Ability System Component
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "AbilitySystem")
@@ -36,7 +37,6 @@ public:
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "AbilitySystem")
 	EGameplayEffectReplicationMode ASCReplicationMode = EGameplayEffectReplicationMode::Mixed;
-
 	
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -50,8 +50,12 @@ protected:
 	UFUNCTION(BlueprintImplementableEvent)
 	void GenerateWidgetOnSpawn();
 
+	UFUNCTION(BlueprintImplementableEvent)
+	void KillZ();
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AbilitySystem")
 	TArray<TSubclassOf<UGameplayAbility>> StartingAbilities;
+	
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
@@ -74,5 +78,6 @@ public:
 
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
-	UFUNCTION(BlueprintImplementableEvent) void Die();
+	UFUNCTION(BlueprintImplementableEvent)
+	void Die();
 };

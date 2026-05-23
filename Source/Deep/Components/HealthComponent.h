@@ -16,7 +16,7 @@ class DEEP_API UHealthComponent : public UActorComponent
 protected:
 	
 	UPROPERTY() UAbilitySystemComponent* AbilitySystemComponent;
-	UPROPERTY() AActor* LastDamageInstigator = nullptr;
+	UPROPERTY(BlueprintReadOnly) AActor* LastDamageInstigator = nullptr;
 	UPROPERTY() AActor* LastUsedWeapon = nullptr;
 	UPROPERTY() UBasicAttributeSet* Attributes;
 	

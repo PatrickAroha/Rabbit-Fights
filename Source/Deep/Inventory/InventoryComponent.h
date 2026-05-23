@@ -44,7 +44,8 @@ public:
 	UFUNCTION(Server, Reliable, BlueprintCallable) void Server_DropItem(int32 SlotIndex);
 	UFUNCTION(Server, Reliable) void Server_SwapItem(int32 A, int32 B);
 	UFUNCTION() UItemInstance* PickupReplace(UItemInstance* RecivedItem, int32 SlotIndex);
-
+	UFUNCTION(Server, Reliable, BlueprintCallable) void Server_ConsumeItem(int32 SlotIndex, int32 Amount = 1);
+	
 	//Replicate
 	UFUNCTION() void OnRep_Slots();
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;

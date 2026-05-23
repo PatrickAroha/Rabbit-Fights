@@ -2,6 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "Abilities/GameplayAbility.h"
+#include "NiagaraComponent.h"
 #include "ItemDefinition.generated.h"
 
 class ABaseItem;
@@ -70,5 +71,12 @@ public:
 
 	UPROPERTY(EditDefaultsOnly)
 	FGameplayTag CueMagicHand;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="VFX")
+	TObjectPtr<UParticleSystem> CascadeEffect;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="VFX")
+	TObjectPtr<UNiagaraSystem> NiagaraEffect;
+	
 	
 };

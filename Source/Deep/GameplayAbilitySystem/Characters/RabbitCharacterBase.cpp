@@ -46,6 +46,13 @@ void ARabbitCharacterBase::CheckJumpInput(float DeltaTime)
 	bWasJumping = bDidJump;
 }
 
+void ARabbitCharacterBase::FellOutOfWorld(const class UDamageType& dmgType)
+{
+	//Super::FellOutOfWorld(dmgType);
+	
+	KillZ();
+}
+
 
 // Called when the game starts or when spawned
 void ARabbitCharacterBase::BeginPlay()
