@@ -1,5 +1,6 @@
 #pragma once
 #include "CoreMinimal.h"
+#include "GameplayAbilitySpecHandle.h"
 #include "UObject/Object.h"
 #include "ItemInstance.generated.h"
 
@@ -25,6 +26,9 @@ public:
 
 	UPROPERTY(EditAnywhere, Instanced, BlueprintReadOnly, Category="Fragments")
 	TArray<TObjectPtr<UFragment>> Fragments;
+
+	UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadOnly)
+	FGameplayAbilitySpecHandle AbilitySpecHandle;
 
 	UPROPERTY(BlueprintReadOnly)
 	ABaseItem* SpawnedActor = nullptr;

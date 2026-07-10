@@ -9,7 +9,6 @@
 APickUp::APickUp()
 {
 	PrimaryActorTick.bCanEverTick = false;
-
 	MeshComp = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Mesh"));
 	SetRootComponent(MeshComp);
 	
@@ -49,6 +48,7 @@ void APickUp::BeginPlay()
 	RefreshMesh();
 }
 
+
 void APickUp::OnRep_Item()
 {
 	RefreshMesh();
@@ -56,10 +56,11 @@ void APickUp::OnRep_Item()
 
 void APickUp::RefreshMesh()
 {
-	if (Item && Item->Def && Item->Def->Mesh)
+	if (Item && Item->Def && Item->Def->PickupMesh)
 	{
-		MeshComp->SetStaticMesh(Item->Def->Mesh);
+		MeshComp->SetStaticMesh(Item->Def->PickupMesh);
 	}
+
 }
 
 bool APickUp::ReplicateSubobjects(UActorChannel* Channel, FOutBunch* Bunch, FReplicationFlags* RepFlags)

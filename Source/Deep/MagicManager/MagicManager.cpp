@@ -64,6 +64,7 @@ void UMagicManager::UpdateSlot(int32 Slot, UItemInstance* NewMagic)
 	FGameplayAbilitySpecHandle Handle = GiveMagicAbility(NewMagic);
 	if (!Handle.IsValid()) return;
 
+	NewMagic->AbilitySpecHandle = Handle;
 	Magics[Slot] = NewMagic;
 	MagicHandles[Slot] = Handle;
 	
@@ -96,7 +97,9 @@ void UMagicManager::RemoveMagicAbility(FGameplayAbilitySpecHandle Handle, int32 
 			ASC->ClearAbility(Handle);
 		}
 	}
-
+	
+	Magics[Slot]->AbilitySpecHandle = FGameplayAbilitySpecHandle();
+	
 	Magics[Slot] = nullptr;
 	MagicHandles[Slot] = FGameplayAbilitySpecHandle();
 
