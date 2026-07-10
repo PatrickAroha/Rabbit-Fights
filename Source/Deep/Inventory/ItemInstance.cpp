@@ -138,4 +138,5 @@ void UItemInstance::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLif
 	DOREPLIFETIME(UItemInstance, Def);
 	DOREPLIFETIME(UItemInstance, Quantity);
 	DOREPLIFETIME(UItemInstance, Durability);
+	DOREPLIFETIME(UItemInstance, AbilitySpecHandle);
 }

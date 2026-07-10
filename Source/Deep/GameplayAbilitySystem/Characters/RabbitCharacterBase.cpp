@@ -48,7 +48,10 @@ void ARabbitCharacterBase::CheckJumpInput(float DeltaTime)
 
 void ARabbitCharacterBase::FellOutOfWorld(const class UDamageType& dmgType)
 {
-	//Super::FellOutOfWorld(dmgType);
+	if (!HasAuthority())
+	{
+		return;
+	}
 	
 	KillZ();
 }
@@ -67,7 +70,7 @@ void ARabbitCharacterBase::PossessedBy(AController* NewController)
 	if (AbilitySystemComponent)
 	{
 		AbilitySystemComponent->InitAbilityActorInfo(this, this);
-		GenerateWidgetOnSpawn();
+		GenerateWidgetOnSpawn(); 
 		GrantAbilities(StartingAbilities);
 	}
 }

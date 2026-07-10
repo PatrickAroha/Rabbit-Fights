@@ -45,13 +45,16 @@ public:
 	bool ByMinigame;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
-	TObjectPtr<UStaticMesh> Mesh;
+	TObjectPtr<UStaticMesh> PickupMesh;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
 	TSubclassOf<APickUp> PickupClass;
 
 	// ===== ITEM =====
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, meta=(EditCondition="ItemCategory == EItemCategory::Item", EditConditionHides))
+	TObjectPtr<UStaticMesh> ItemMesh;
+	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, meta=(EditCondition="ItemCategory == EItemCategory::Item", EditConditionHides))
 	TSubclassOf<ABaseItem> ActorItemClass;
 
@@ -63,6 +66,9 @@ public:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
 	UTexture2D* WeaponType;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Info")
+	int32 Cooldown = 0;
 
 	// ===== MAGIC =====
 	
@@ -77,6 +83,5 @@ public:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="VFX")
 	TObjectPtr<UNiagaraSystem> NiagaraEffect;
-	
 	
 };
