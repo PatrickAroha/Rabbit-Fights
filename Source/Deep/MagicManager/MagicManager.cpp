@@ -40,14 +40,16 @@ UItemInstance* UMagicManager::TryCollectMagic(UItemInstance* MagicItem)
 	
 	UItemInstance* Temp = Magics[ReplaceSlot];
 
+	Server_DropMagic(ReplaceSlot);
+	
 	UpdateSlot(ReplaceSlot, MagicItem);
 
 	ChangedSlot = ReplaceSlot;
 	OnMagicAdded.Broadcast(Slot);
-
+	
 	Server_ChangeSlot(SelectedSlot);
 
-	return Temp;
+	return nullptr;
 }
 
 void UMagicManager::UpdateSlot(int32 Slot, UItemInstance* NewMagic)

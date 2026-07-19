@@ -54,4 +54,27 @@ public:
 
 	UPROPERTY(Transient)
 	bool bHUDCreated = false;
+
+	//----------------------- CLAUDE + GPT ----------------------------------
+
+	UFUNCTION(BlueprintImplementableEvent, Category = "Streaming")
+	void OnMapFullyLoaded();
+	
+private:
+
+	
+	void StartMapStreamingCheck();
+	void CheckMapStreaming();
+	void RemoveLoadingScreen();
+
+	FTimerHandle StreamingCheckTimer;
+
+	int32 LastStreamingUpdateId = INDEX_NONE;
+	int32 StableEvaluationCount = 0;
+
+	double StreamingCheckStartTime = 0.0;
+
+	static constexpr int32 RequiredStableEvaluations = 3;
+	static constexpr float StreamingCheckInterval = 0.05f;
+	static constexpr float MaxWaitTime = 8.0f;
 };

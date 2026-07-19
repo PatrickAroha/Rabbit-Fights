@@ -21,7 +21,6 @@ void AMyGameState::SetMatchPhase(EMatchPhase NewPhase)
 	MatchPhase = NewPhase;
 	
 	OnPhaseChanged(MatchPhase);
-
 	OnRep_MatchPhase(Old);
 }
 
@@ -47,3 +46,4 @@ void AMyGameState::OnRep_MatchPhase(EMatchPhase OldPhase)
 	//OnPhaseChanged(MatchPhase);
 	OnMatchPhaseChanged.Broadcast(OldPhase, MatchPhase);
 }
+

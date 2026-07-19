@@ -2,7 +2,9 @@
 
 
 #include "MyPlayerController.h"
-
+#include "ContentStreaming.h"
+#include "Engine/World.h"
+#include "TimerManager.h"
 #include "MyGameState.h"
 #include "MyHUD.h"
 #include "GameFramework/PlayerState.h"
@@ -15,13 +17,15 @@ void AMyPlayerController::BeginPlay()
 
 	if (!IsLocalController()) return;
 	
-	TryBindGameState();			//Faz o Bind pra gerar a HUD
+	TryBindGameState();
 	
 	AMyGameState* GS = GetWorld() ? GetWorld()->GetGameState<AMyGameState>() : nullptr;
 	if (GS)
 	{
 		TryCreateHUDIfReady(GS->MatchPhase, GS->MatchPhase);
 	}
+
+	StartMapStreamingCheck();
 }
 
 void AMyPlayerController::TryBindGameState()
@@ -117,5 +121,70 @@ void AMyPlayerController::ClientHUDStateChanged_Implementation(EHUDState NewStat
 	if (AMyHUD* HUD = GetHUD<AMyHUD>())
 	{
 		HUD->OnStateChanged(NewState);
+	}
+}
+
+//------------------ CLAUDE + GPT ---------------------------------
+void AMyPlayerController::StartMapStreamingCheck()
+{
+	UWorld* World = GetWorld();
+	if (!World)
+	{
+		return;
+	}
+
+	IRenderAssetStreamingManager& StreamingManager =
+		IStreamingManager::Get().GetRenderAssetStreamingManager();
+
+	// Recalcula texturas e meshes necessárias para a view atual.
+	StreamingManager.UpdateResourceStreaming(0.0f, true);
+
+	LastStreamingUpdateId = StreamingManager.GetNumWantingResourcesID();
+	StableEvaluationCount = 0;
+	StreamingCheckStartTime = World->GetRealTimeSeconds();
+
+	// Rate = 0.05f (nunca 0.0f, senão o timer é limpo em vez de rodar)
+	World->GetTimerManager().SetTimer(
+		StreamingCheckTimer,
+		this,
+		&AMyPlayerController::CheckMapStreaming,
+		StreamingCheckInterval,
+		true,
+		StreamingCheckInterval
+	);
+}
+
+void AMyPlayerController::CheckMapStreaming()
+{
+	UWorld* World = GetWorld();
+	if (!World)
+	{
+		return;
+	}
+
+	IRenderAssetStreamingManager& StreamingManager =
+		IStreamingManager::Get().GetRenderAssetStreamingManager();
+
+	StreamingManager.UpdateResourceStreaming(StreamingCheckInterval, true);
+
+	const int32 CurrentUpdateId = StreamingManager.GetNumWantingResourcesID();
+
+	// Só conta quando o sistema realmente reavaliou o streaming.
+	if (CurrentUpdateId != LastStreamingUpdateId)
+	{
+		LastStreamingUpdateId = CurrentUpdateId;
+
+		StableEvaluationCount = (StreamingManager.GetNumWantingResources() == 0)
+			? StableEvaluationCount + 1 : 0;
+	}
+
+	const double ElapsedTime = World->GetRealTimeSeconds() - StreamingCheckStartTime;
+	const bool bStreamingReady = StableEvaluationCount >= RequiredStableEvaluations;
+	const bool bTimedOut = ElapsedTime >= MaxWaitTime;
+
+	if (bStreamingReady || bTimedOut)
+	{
+		World->GetTimerManager().ClearTimer(StreamingCheckTimer);
+		OnMapFullyLoaded(); // dispara o evento do Blueprint
 	}
 }
