@@ -65,7 +65,6 @@ private:
 	
 	void StartMapStreamingCheck();
 	void CheckMapStreaming();
-	void RemoveLoadingScreen();
 
 	FTimerHandle StreamingCheckTimer;
 

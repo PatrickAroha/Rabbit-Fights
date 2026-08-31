@@ -8,6 +8,7 @@ void URabbitGameplayAbility::Tick(float DeltaTime)
 	TickGA(DeltaTime);
 }
 
+
 ETickableTickType URabbitGameplayAbility::GetTickableTickType() const
 {
 	return HasAnyFlags(RF_ClassDefaultObject) ? ETickableTickType::Never : ETickableTickType::Always;

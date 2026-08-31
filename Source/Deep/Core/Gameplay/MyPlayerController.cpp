@@ -173,10 +173,9 @@ void AMyPlayerController::CheckMapStreaming()
 	if (CurrentUpdateId != LastStreamingUpdateId)
 	{
 		LastStreamingUpdateId = CurrentUpdateId;
-
-		StableEvaluationCount = (StreamingManager.GetNumWantingResources() == 0)
-			? StableEvaluationCount + 1 : 0;
 	}
+
+	StableEvaluationCount = (StreamingManager.GetNumWantingResources() == 0) ? StableEvaluationCount + 1 : 0;
 
 	const double ElapsedTime = World->GetRealTimeSeconds() - StreamingCheckStartTime;
 	const bool bStreamingReady = StableEvaluationCount >= RequiredStableEvaluations;

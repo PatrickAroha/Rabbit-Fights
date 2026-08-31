@@ -9,22 +9,13 @@
 
 void AMyPlayerStateLobby::PressedReady()
 {
-
 	S_Ready();
-
 }
 
 void AMyPlayerStateLobby::S_Ready_Implementation()
 {
 	
-	if (bReady)
-	{
-		bReady = false;
-	}
-	else
-	{
-		bReady = true;
-	}
+	bReady = !bReady;
 	
 	OnRep_bReady();
 	
