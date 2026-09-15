@@ -1,13 +1,10 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
-
 #include "RabbitGameplayAbility.h"
+
 
 void URabbitGameplayAbility::Tick(float DeltaTime)
 {
 	TickGA(DeltaTime);
 }
-
 
 ETickableTickType URabbitGameplayAbility::GetTickableTickType() const
 {
